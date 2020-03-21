@@ -1,32 +1,39 @@
-const remoteVideo = document.getElementById('remote-video');
-const closeVideoButton = document.getElementById('close-video');
-const brokenMyVideo = document.getElementById('broken-my-video');
-const usernameModal = document.getElementById('username-input-modal');
-const joinButton = document.getElementById('join-button');
-
-const hide = 'hide';
-const globalChannel = 'global-channel';
-let webRtcPhone;
-let pubnub;
-// An RTCConfiguration dictionary from the browser WebRTC API
-// Add STUN and TURN server information here for WebRTC calling
-const rtcConfig = {};
-let username; // User's name in the app
-let myAudioVideoStream; // Local audio and video stream
-let noVideoTimeout; // Used to check if a video connection succeeded
-const noVideoTimeoutMS = 5000; // Error alert if the video fails to connect
-
-const isClient = window.navigator.platform === 'MacIntel' ? false : true;
-
 const init = async () => {
+    const remoteVideo = document.getElementById('remote-video');
+    // const brokenMyVideo = document.getElementById('broken-my-video');
+    const usernameModal = document.getElementById('username-input-modal');
+    const joinButton = document.getElementById('join-button');
+
+    const hide = 'hide';
+    const globalChannel = 'global-channel';
+    let webRtcPhone;
+    let pubnub;
+    // An RTCConfiguration dictionary from the browser WebRTC API
+    // Add STUN and TURN server information here for WebRTC calling
+    const rtcConfig = {};
+    let username; // User's name in the app
+
+    let noVideoTimeout; // Used to check if a video connection succeeded
+    const noVideoTimeoutMS = 5000; // Error alert if the video fails to connect
+
+    const isClient = window.navigator.platform === 'MacIntel' ? false : true;
+
+    function noVideo() {
+        const message = 'No peer connection made.<br>' +
+            'Try adding a TURN server to the WebRTC configuration.';
+        if (remoteVideo.paused) {
+            alert(message);
+            clearTimeout(noVideoTimeout);
+            webRtcPhone.disconnect(); // disconnects the current phone call
+        }
+    }
+
+    let myAudioVideoStream; // Local audio and video stream
     try {
-        const localMediaStream = await navigator.mediaDevices.getUserMedia({
+        myAudioVideoStream = await navigator.mediaDevices.getUserMedia({
             audio: true,
             video: true,
         });
-        console.log('media okay');
-        // Init the audio and video stream on this client
-        myAudioVideoStream = localMediaStream;
     } catch (e) {
         alert(e.toString());
     }
@@ -44,7 +51,7 @@ const init = async () => {
     const onPeerStream = (webRTCTrackEvent) => {
         console.log('Peer audio/video stream now available');
         const peerStream = webRTCTrackEvent.streams[0];
-        window.peerStream = peerStream;
+        // window.peerStream = peerStream;
         remoteVideo.srcObject = peerStream;
     };
     // WebRTC phone object event for when a remote peer attempts to call you.
@@ -55,14 +62,12 @@ const init = async () => {
     };
     // WebRTC phone object event for when the remote peer responds to your call request.
     const onCallResponse = (acceptedCall) => {
-        console.log('Call response: ', acceptedCall ? 'accepted' : 'rejected');
         if (acceptedCall) {
             noVideoTimeout = setTimeout(noVideo, noVideoTimeoutMS);
         }
     };
     // WebRTC phone object event for when a call disconnects or timeouts.
     const onDisconnect = () => {
-        console.log('Call disconnected');
         clearTimeout(noVideoTimeout);
     };
     // Lists the online users in the UI and registers a call method to the click event
@@ -150,15 +155,5 @@ const init = async () => {
     };
     webRtcPhone = new WebRtcPhone(config);
 };
-
-function noVideo() {
-    const message = 'No peer connection made.<br>' +
-        'Try adding a TURN server to the WebRTC configuration.';
-    if (remoteVideo.paused) {
-        alert(message);
-        clearTimeout(noVideoTimeout);
-        webRtcPhone.disconnect(); // disconnects the current phone call
-    }
-}
 
 init();
