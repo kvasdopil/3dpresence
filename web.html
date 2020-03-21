@@ -7,10 +7,7 @@
 </head>
 
 <body>
-    <div>
-        <button id="open-room">Open Room</button>
-        <button id="join-room">Join Room</button>
-    </div>
+    <button id="join-room">Join Room</button>
     <div id="videos-container"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/rtcmulticonnection@3.6.9/dist/RTCMultiConnection.min.js"></script>
@@ -19,19 +16,6 @@
 
     <script>
         const ROOMID = 'lexa-private-room-mwahahah';
-
-        document.getElementById('open-room').onclick = () => {
-            connection.open(ROOMID, () => console.log('connected', ROOMID));
-        };
-
-        document.getElementById('join-room').onclick = () => {
-            connection.sdpConstraints.mandatory = {
-                OfferToReceiveAudio: true,
-                OfferToReceiveVideo: true
-            };
-            connection.join(ROOMID);
-        };
-
         var connection = new RTCMultiConnection();
 
         connection.socketURL = 'https://rtcmulticonnection.herokuapp.com:443/';
@@ -66,11 +50,25 @@
             connection.videosContainer.appendChild(event.mediaElement);
         };
 
-        connection.onstreamended = (event) => {
-            console.log('onstream end', event);
-        };
-
+        connection.onstreamended = (event) => console.log('onstream end', event);
         connection.onMediaError = (e) => console.log('media error', e);
+
+        // document.getElementById('open-room').onclick = () => {
+        //     connection.open(ROOMID, () => console.log('connected', ROOMID));
+        // };
+
+        if (document.location.hash !== "#server") {
+            document.getElementById('join-room').onclick = () => {
+                connection.sdpConstraints.mandatory = {
+                    OfferToReceiveAudio: true,
+                    OfferToReceiveVideo: true
+                };
+                connection.join(ROOMID);
+            };
+        } else {
+            document.getElementById('join-room').remove();
+            connection.open(ROOMID, () => console.log('connected', ROOMID));
+        }
     </script>
 </body>
 
