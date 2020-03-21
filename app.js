@@ -1,11 +1,8 @@
-// const chatInterface = document.getElementById('chat-interface');
 const remoteVideo = document.getElementById('remote-video');
-// const videoModal = document.getElementById('video-modal');
 const closeVideoButton = document.getElementById('close-video');
 const brokenMyVideo = document.getElementById('broken-my-video');
 const usernameModal = document.getElementById('username-input-modal');
 const joinButton = document.getElementById('join-button');
-const onlineList = document.getElementById('online-list');
 
 const hide = 'hide';
 const globalChannel = 'global-channel';
@@ -18,6 +15,8 @@ let username; // User's name in the app
 let myAudioVideoStream; // Local audio and video stream
 let noVideoTimeout; // Used to check if a video connection succeeded
 const noVideoTimeoutMS = 5000; // Error alert if the video fails to connect
+
+const isClient = window.navigator.platform === 'MacIntel' ? false : true;
 
 const init = async () => {
     try {
@@ -35,7 +34,7 @@ const init = async () => {
     // Prompt the user for a username input
     username = await new Promise((resolve) => {
         joinButton.addEventListener('click', (event) => {
-            resolve(window.navigator.platform);
+            resolve(isClient ? 'client' : 'server');
         });
     })
 
@@ -55,8 +54,6 @@ const initWebRtcApp = () => {
     // WebRTC phone object event for when a remote peer attempts to call you.
     const onIncomingCall = (fromUuid, callResponseCallback) => {
         webRtcPhone.disconnect();
-        // videoModal.classList.remove(hide);
-        // chatInterface.classList.add(hide);
         noVideoTimeout = setTimeout(noVideo, noVideoTimeoutMS);
         callResponseCallback({ acceptedCall: true });
     };
@@ -64,57 +61,32 @@ const initWebRtcApp = () => {
     const onCallResponse = (acceptedCall) => {
         console.log('Call response: ', acceptedCall ? 'accepted' : 'rejected');
         if (acceptedCall) {
-            // videoModal.classList.remove(hide);
-            // chatInterface.classList.add(hide);
             noVideoTimeout = setTimeout(noVideo, noVideoTimeoutMS);
         }
     };
     // WebRTC phone object event for when a call disconnects or timeouts.
     const onDisconnect = () => {
         console.log('Call disconnected');
-        // videoModal.classList.add(hide);
-        // chatInterface.classList.remove(hide);
         clearTimeout(noVideoTimeout);
     };
     // Lists the online users in the UI and registers a call method to the click event
     //     When a user clicks a peer's name in the online list, the app calls that user.
     const addToOnlineUserList = (occupant) => {
-        const userId = occupant.uuid;
         const name = occupant.state ? occupant.state.name : null;
         if (!name) return;
 
-
-        // const userListDomElement = document.createElement('div');
-        // userListDomElement.id = userId;
-        // userListDomElement.innerHTML = name;
-        // const alreadyInList = document.getElementById(userId);
-        const isMe = pubnub.getUUID() === userId;
-        // if (alreadyInList) {
-        //     removeFromOnlineUserList(occupant.uuid);
-        // }
+        const isMe = pubnub.getUUID() === occupant.uuid;
         if (isMe) {
             return;
         }
-        // onlineList.appendChild(userListDomElement);
 
-        if (name === 'MacIntel') {
-            const userToCall = userId;
-            webRtcPhone.callUser(userToCall, {
+        if (name === 'server') {
+            webRtcPhone.callUser(occupant.uuid, {
                 myStream: myAudioVideoStream
             });
         }
-
-        // userListDomElement.addEventListener('click', (event) => {
-        //     const userToCall = userId;
-        //     webRtcPhone.callUser(userToCall, {
-        //         myStream: myAudioVideoStream
-        //     });
-        // });
     }
-    const removeFromOnlineUserList = (uuid) => {
-        const div = document.getElementById(uuid);
-        if (div) div.remove();
-    };
+    const removeFromOnlineUserList = (uuid) => { };
     pubnub = new PubNub({
         publishKey: 'pub-c-27f55276-cf45-4677-886f-9c30d1c361ff',
         subscribeKey: 'sub-c-96d014b8-6872-11ea-bfec-9ea4064cf66f'
@@ -183,33 +155,6 @@ const initWebRtcApp = () => {
     webRtcPhone = new WebRtcPhone(config);
 };
 
-function createMessageHTML(messageEvent) {
-    const text = messageEvent.message.text;
-    const jsTime = parseInt(messageEvent.timetoken.substring(0, 13));
-    const dateString = new Date(jsTime).toLocaleString();
-    const senderUuid = messageEvent.publisher;
-    const senderName = senderUuid === pubnub.getUUID()
-        ? username
-        : document.getElementById(senderUuid).children[1].innerText;
-    const div = document.createElement('div');
-    const b = document.createElement('b');
-    div.id = messageEvent.timetoken;
-    b.innerHTML = `${senderName} (${dateString}): `;
-    div.appendChild(b);
-    div.innerHTML += text;
-    return div;
-}
-
-function sortNodeChildren(parent, attribute) {
-    const length = parent.children.length;
-    for (let i = 0; i < length - 1; i++) {
-        if (parent.children[i + 1][attribute] < parent.children[i][attribute]) {
-            parent.children[i + 1].parentNode
-                .insertBefore(parent.children[i + 1], parent.children[i]);
-            i = -1;
-        }
-    }
-}
 function noVideo() {
     const message = 'No peer connection made.<br>' +
         'Try adding a TURN server to the WebRTC configuration.';
