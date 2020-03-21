@@ -120,12 +120,8 @@ const initWebRtcApp = () => {
         onlineList.appendChild(userListDomElement);
         userListDomElement.addEventListener('click', (event) => {
             const userToCall = userId;
-            confirmCall(name).then((yesDoCall) => {
-                if (yesDoCall) {
-                    webRtcPhone.callUser(userToCall, {
-                        myStream: myAudioVideoStream
-                    });
-                }
+            webRtcPhone.callUser(userToCall, {
+                myStream: myAudioVideoStream
             });
         });
     }
@@ -213,20 +209,6 @@ function incomingCall(name) {
         }
         callFromSpan.innerHTML = name;
         incomingCallModal.classList.remove(hide);
-    });
-}
-function confirmCall(name) {
-    return new Promise((resolve) => {
-        yesCallButton.onclick = function () {
-            callConfirmModal.classList.add(hide);
-            resolve(true);
-        }
-        noCallButton.onclick = function () {
-            callConfirmModal.classList.add(hide);
-            resolve(false);
-        }
-        callConfirmUsername.innerHTML = name;
-        callConfirmModal.classList.remove(hide);
     });
 }
 function getLocalUserName() {
