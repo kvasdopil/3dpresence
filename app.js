@@ -1,10 +1,5 @@
 const init = async () => {
     const remoteVideo = document.getElementById('remote-video');
-    // const brokenMyVideo = document.getElementById('broken-my-video');
-    const usernameModal = document.getElementById('username-input-modal');
-    const joinButton = document.getElementById('join-button');
-
-    const hide = 'hide';
     const globalChannel = 'global-channel';
     let webRtcPhone;
     let pubnub;
@@ -38,14 +33,7 @@ const init = async () => {
         alert(e.toString());
     }
 
-    // Prompt the user for a username input
-    username = await new Promise((resolve) => {
-        joinButton.addEventListener('click', (event) => {
-            resolve(isClient ? 'client' : 'server');
-        });
-    })
-
-    usernameModal.classList.add(hide);
+    username = isClient ? 'client' : 'server';
 
     // WebRTC phone object event for when the remote peer's video becomes available.
     const onPeerStream = (webRTCTrackEvent) => {
