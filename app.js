@@ -1,5 +1,4 @@
 const chatInterface = document.getElementById('chat-interface');
-const myVideo = document.getElementById('my-video');
 const remoteVideo = document.getElementById('remote-video');
 const videoModal = document.getElementById('video-modal');
 const closeVideoButton = document.getElementById('close-video');
@@ -29,7 +28,6 @@ const init = async () => {
         console.log('media okay');
         // Init the audio and video stream on this client
         myAudioVideoStream = localMediaStream;
-        myVideo.srcObject = myAudioVideoStream;
     } catch (e) {
         alert(e.toString());
     }
