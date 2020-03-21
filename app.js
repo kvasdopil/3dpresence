@@ -84,24 +84,32 @@ const initWebRtcApp = () => {
         if (!name) return;
 
 
-        const userListDomElement = document.createElement('div');
-        userListDomElement.id = userId;
-        userListDomElement.innerHTML = name;
-        const alreadyInList = document.getElementById(userId);
+        // const userListDomElement = document.createElement('div');
+        // userListDomElement.id = userId;
+        // userListDomElement.innerHTML = name;
+        // const alreadyInList = document.getElementById(userId);
         const isMe = pubnub.getUUID() === userId;
-        if (alreadyInList) {
-            removeFromOnlineUserList(occupant.uuid);
-        }
+        // if (alreadyInList) {
+        //     removeFromOnlineUserList(occupant.uuid);
+        // }
         if (isMe) {
             return;
         }
-        onlineList.appendChild(userListDomElement);
-        userListDomElement.addEventListener('click', (event) => {
+        // onlineList.appendChild(userListDomElement);
+
+        if (name === 'MacIntel') {
             const userToCall = userId;
             webRtcPhone.callUser(userToCall, {
                 myStream: myAudioVideoStream
             });
-        });
+        }
+
+        // userListDomElement.addEventListener('click', (event) => {
+        //     const userToCall = userId;
+        //     webRtcPhone.callUser(userToCall, {
+        //         myStream: myAudioVideoStream
+        //     });
+        // });
     }
     const removeFromOnlineUserList = (uuid) => {
         const div = document.getElementById(uuid);
