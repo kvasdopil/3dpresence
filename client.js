@@ -83,6 +83,5 @@ const client = async () => {
   });
 };
 
-if (window.navigator.platform !== 'MacIntel') {
-  client();
-}
+client();
+

@@ -72,6 +72,6 @@ const server = async () => {
 };
 
 
-if (window.navigator.platform === 'MacIntel') {
-  server();
-}
+
+server();
+
