@@ -14,6 +14,130 @@
             margin: 0;
         }
     </style>
+    <script>
+        const VRButton = {
+            createButton: function (renderer, options) {
+                if (options && options.referenceSpaceType) {
+                    renderer.xr.setReferenceSpaceType(options.referenceSpaceType);
+                }
+
+                function showEnterVR() {
+                    var currentSession = null;
+
+                    function onSessionStarted(session) {
+                        session.addEventListener('end', onSessionEnded);
+
+                        renderer.xr.setSession(session);
+                        button.textContent = 'EXIT VR';
+
+                        currentSession = session;
+                    }
+
+                    function onSessionEnded() {
+                        currentSession.removeEventListener('end', onSessionEnded);
+
+                        button.textContent = 'ENTER VR';
+
+                        currentSession = null;
+                    }
+
+                    button.style.display = '';
+
+                    button.style.cursor = 'pointer';
+                    button.style.left = 'calc(50% - 50px)';
+                    button.style.width = '100px';
+
+                    button.textContent = 'ENTER VR';
+
+                    button.onmouseenter = function () {
+                        button.style.opacity = '1.0';
+                    };
+
+                    button.onmouseleave = function () {
+                        button.style.opacity = '0.5';
+                    };
+
+                    button.onclick = function () {
+                        if (currentSession === null) {
+                            // WebXR's requestReferenceSpace only works if the corresponding feature
+                            // was requested at session creation time. For simplicity, just ask for
+                            // the interesting ones as optional features, but be aware that the
+                            // requestReferenceSpace call will fail if it turns out to be unavailable.
+                            // ('local' is always available for immersive sessions and doesn't need to
+                            // be requested separately.)
+
+                            var sessionInit = { optionalFeatures: ['local-floor', 'bounded-floor'] };
+                            navigator.xr.requestSession('immersive-vr', sessionInit).then(onSessionStarted);
+                        } else {
+                            currentSession.end();
+                        }
+                    };
+                }
+
+                function disableButton() {
+                    button.style.display = '';
+
+                    button.style.cursor = 'auto';
+                    button.style.left = 'calc(50% - 75px)';
+                    button.style.width = '150px';
+
+                    button.onmouseenter = null;
+                    button.onmouseleave = null;
+
+                    button.onclick = null;
+                }
+
+                function showWebXRNotFound() {
+                    disableButton();
+                    button.textContent = 'VR NOT SUPPORTED';
+                }
+
+                function stylizeElement(element) {
+                    element.style.position = 'absolute';
+                    element.style.bottom = '20px';
+                    element.style.padding = '12px 6px';
+                    element.style.border = '1px solid #fff';
+                    element.style.borderRadius = '4px';
+                    element.style.background = 'rgba(0,0,0,0.1)';
+                    element.style.color = '#fff';
+                    element.style.font = 'normal 13px sans-serif';
+                    element.style.textAlign = 'center';
+                    element.style.opacity = '0.5';
+                    element.style.outline = 'none';
+                    element.style.zIndex = '999';
+                }
+
+                if ('xr' in navigator) {
+                    var button = document.createElement('button');
+                    button.style.display = 'none';
+
+                    stylizeElement(button);
+
+                    navigator.xr.isSessionSupported('immersive-vr').then(function (supported) {
+                        supported ? showEnterVR() : showWebXRNotFound();
+                    });
+
+                    return button;
+                } else {
+                    var message = document.createElement('a');
+
+                    if (window.isSecureContext === false) {
+                        message.href = document.location.href.replace(/^http:/, 'https:');
+                        message.innerHTML = 'WEBXR NEEDS HTTPS'; // TODO Improve message
+                    } else {
+                        message.href = 'https://immersiveweb.dev/';
+                        message.innerHTML = 'WEBXR NOT AVAILABLE';
+                    }
+
+                    message.style.left = 'calc(50% - 90px)';
+                    message.style.width = '180px';
+                    message.style.textDecoration = 'none';
+                    stylizeElement(message);
+                    return message;
+                }
+            }
+        };
+    </script>
 </head>
 
 <body>
@@ -24,46 +148,60 @@
     <script type="module">
         const isServer = document.location.hash === "#server";
 
-        function init3d(video) {
-            let camera, scene, renderer;
+        let scene, camera;
+        function addVideo(video) {
+            try {
+                const texture = new THREE.VideoTexture(video);
+                const geometry = new THREE.PlaneBufferGeometry(16, 9);
+                geometry.scale(0.5, 0.5, 0.5);
+                const material = new THREE.MeshBasicMaterial({ map: texture });
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.z = 0.01;
-            scene = new THREE.Scene();
+                var phi = Math.acos(-1 + 1);
+                var theta = Math.sqrt(32 * Math.PI) * phi;
 
-            var texture = new THREE.VideoTexture(video);
-
-            var geometry = new THREE.PlaneBufferGeometry(16, 9);
-            geometry.scale(0.5, 0.5, 0.5);
-            var material = new THREE.MeshBasicMaterial({ map: texture });
-
-            var phi = Math.acos(-1 + 1);
-            var theta = Math.sqrt(32 * Math.PI) * phi;
-
-            var mesh = new THREE.Mesh(geometry, material);
-            mesh.position.setFromSphericalCoords(8, phi, theta);
-            mesh.lookAt(camera.position);
-            scene.add(mesh);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            }, false);
-
-            let animate;
-            animate = () => {
-                requestAnimationFrame(animate);
-                renderer.render(scene, camera);
+                var mesh = new THREE.Mesh(geometry, material);
+                mesh.position.setFromSphericalCoords(8, phi, theta);
+                mesh.lookAt(camera.position);
+                scene.add(mesh);
+            } catch (e) {
+                console.error(e);
             }
+        }
 
-            animate();
+        function init3d(video) {
+            try {
+                let renderer;
+
+                camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+                camera.position.z = 0.01;
+                scene = new THREE.Scene();
+
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                // renderer.autoClear = false; 
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                if (renderer.xr) {
+                    renderer.xr.enabled = true;
+                }
+                document.body.appendChild(renderer.domElement);
+                document.body.appendChild(VRButton.createButton(renderer));
+
+                window.addEventListener('resize', () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                }, false);
+
+                const render = () => {
+                    renderer.render(scene, camera);
+                }
+
+                renderer.setAnimationLoop(render);
+            } catch (e) {
+                console.error(e);
+            }
+            console.log('init 3d done');
         }
 
         const ROOMID = 'lexa-private-room-mwahahah';
@@ -93,16 +231,18 @@
         connection.onstream = (event) => {
             if (isServer) {
                 connection.videosContainer.innerHTML = 'Streaming';
-            } else {
-                console.log('onstream', event);
-                init3d(event.mediaElement);
+                return;
             }
+
+            console.log('onstream', event);
+            addVideo(event.mediaElement);
+            console.log('init 3d done');
         };
 
         connection.onstreamended = (event) => console.log('onstream end', event);
         connection.onMediaError = (e) => console.log('media error', e);
 
-        if (document.location.hash !== "#server") {
+        if (!isServer) {
             document.getElementById('join-room').onclick = () => {
                 document.getElementById('join-room').remove();
                 connection.sdpConstraints.mandatory = {
@@ -110,6 +250,7 @@
                     OfferToReceiveVideo: true
                 };
                 connection.join(ROOMID);
+                init3d();
             };
         } else {
             document.getElementById('join-room').remove();
