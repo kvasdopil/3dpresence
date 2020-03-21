@@ -94,7 +94,11 @@ const initWebRtcApp = () => {
         const userId = occupant.uuid;
         const name = occupant.state ? occupant.state.name : null;
         if (!name) return;
-        const userListDomElement = createUserListItem(userId, name);
+
+
+        const userListDomElement = document.createElement('div');
+        userListDomElement.id = userId;
+        userListDomElement.innerHTML = name;
         const alreadyInList = document.getElementById(userId);
         const isMe = pubnub.getUUID() === userId;
         if (alreadyInList) {
@@ -183,18 +187,6 @@ const initWebRtcApp = () => {
     webRtcPhone = new WebRtcPhone(config);
 };
 
-
-function createUserListItem(userId, name) {
-    const div = document.createElement('div');
-    div.id = userId;
-    const img = document.createElement('img');
-    img.src = './phone.png';
-    const span = document.createElement('span');
-    span.innerHTML = name;
-    div.appendChild(img);
-    div.appendChild(span);
-    return div;
-}
 function createMessageHTML(messageEvent) {
     const text = messageEvent.message.text;
     const jsTime = parseInt(messageEvent.timetoken.substring(0, 13));
