@@ -26,7 +26,7 @@
             return 1;
         }
 
-        let scene, camera;
+        let scene, camera, renderer;
         let videoAdded = false;
         function addVideo(video) {
             if (videoAdded) {
@@ -55,8 +55,6 @@
 
         function init3d(video) {
             try {
-                let renderer;
-
                 camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
                 camera.position.z = 0.01;
                 scene = new THREE.Scene();
@@ -132,11 +130,40 @@
                 init3d();
 
                 setInterval(() => {
-                    connection.send({
-                        text: 'wazup'
-                    });
-                    console.log('send');
-                }, 1000)
+                    try {
+                        const session = renderer.xr && renderer.xr.getSession();
+                        if (!session) {
+                            return connection.send({
+                                type: 'no session',
+                            })
+                        }
+
+                        const vrcam = renderer.xr.getCamera(camera);
+                        if (!vrcam) {
+                            return connection.send({
+                                type: 'no camera',
+                            });
+                        }
+
+                        const { x, y, z } = vrcam.rotation.toVector3();
+                        connection.send({
+                            type: 'camera.rotation',
+                            x, y, z,
+                        })
+                    } catch (e) {
+                        connection.send({ type: 'err', e: e.toString() })
+                    }
+                }, 1000);
+
+                connection.onmessage = (event) => {
+                    window.renderer = renderer;
+                    window.camera = camera;
+                    if (event.data.type == 'eval') {
+                        connection.send({
+                            result: eval(event.data.value),
+                        });
+                    }
+                }
             }
         }
     </script>
