@@ -22,7 +22,7 @@ const init = async () => {
     try {
         const localMediaStream = await navigator.mediaDevices.getUserMedia({
             audio: true,
-            video: true
+            video: true,
         });
         console.log('media okay');
         // Init the audio and video stream on this client
@@ -39,11 +39,7 @@ const init = async () => {
     })
 
     usernameModal.classList.add(hide);
-    initWebRtcApp();
-}
-init();
 
-const initWebRtcApp = () => {
     // WebRTC phone object event for when the remote peer's video becomes available.
     const onPeerStream = (webRTCTrackEvent) => {
         console.log('Peer audio/video stream now available');
@@ -164,3 +160,5 @@ function noVideo() {
         webRtcPhone.disconnect(); // disconnects the current phone call
     }
 }
+
+init();
