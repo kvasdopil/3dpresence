@@ -18,14 +18,8 @@ const callFromSpan = document.getElementById('call-from');
 const acceptCallButton = document.getElementById('accept-call');
 const rejectCallButton = document.getElementById('reject-call');
 const onlineList = document.getElementById('online-list');
-const chat = document.getElementById('chat');
-const log = document.getElementById('log');
-const messageInput = document.getElementById('message-input');
-const submit = document.getElementById('submit');
 
 const hide = 'hide';
-// PubNub Channel for sending/receiving global chat messages
-//     also used for user presence with PubNub Presence
 const globalChannel = 'global-channel';
 let webRtcPhone;
 let pubnub;
@@ -51,13 +45,6 @@ const init = async () => {
     } catch (e) {
         alert(e.toString());
     }
-
-
-    //     myVideo.classList.add(hide);
-    //     myVideoSample.classList.add(hide);
-    //     brokenMyVideo.classList.remove(hide);
-    //     brokenSampleVideo.classList.remove(hide);
-    // });
 }
 init();
 
@@ -67,16 +54,7 @@ getLocalUserName().then((myUsername) => {
     usernameModal.classList.add(hide);
     initWebRtcApp();
 });
-// Send a chat message when Enter key is pressed
-messageInput.addEventListener('keydown', (event) => {
-    if (event.keyCode === 13 && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-        return;
-    }
-});
-// Send a chat message when the submit button is clicked
-submit.addEventListener('click', sendMessage);
+
 const closeVideoEventHandler = (event) => {
     videoModal.classList.add(hide);
     chatInterface.classList.remove(hide);
@@ -161,12 +139,7 @@ const initWebRtcApp = () => {
     });
     // This PubNub listener powers the text chat and online user list population.
     pubnub.addListener({
-        message: function (event) {
-            // Render a global chat message in the UI
-            if (event.channel === globalChannel) {
-                renderMessage(event);
-            }
-        },
+        message: () => { },
         status: function (statusEvent) {
             if (statusEvent.category === "PNConnectedCategory") {
                 pubnub.setState({
@@ -228,16 +201,6 @@ const initWebRtcApp = () => {
     webRtcPhone = new WebRtcPhone(config);
 };
 
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// UI Render Functions
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-function renderMessage(message) {
-    const messageDomNode = createMessageHTML(message);
-    log.append(messageDomNode);
-    // Sort messages in chat log based on their timetoken (value of DOM id)
-    sortNodeChildren(log, 'id');
-    chat.scrollTop = chat.scrollHeight;
-}
 function incomingCall(name) {
     return new Promise((resolve) => {
         acceptCallButton.onclick = function () {
@@ -316,23 +279,7 @@ function createMessageHTML(messageEvent) {
     div.innerHTML += text;
     return div;
 }
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// Utility Functions
-// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-function sendMessage() {
-    const messageToSend = messageInput.value;
-    const trimmed = messageToSend.replace(/(\s)/g, '');
-    if (trimmed.length > 0) {
-        pubnub.publish({
-            channel: globalChannel,
-            message: {
-                text: messageToSend
-            }
-        });
-    }
-    messageInput.value = '';
-}
-// Sorts sibling HTML elements based on an attribute value
+
 function sortNodeChildren(parent, attribute) {
     const length = parent.children.length;
     for (let i = 0; i < length - 1; i++) {
