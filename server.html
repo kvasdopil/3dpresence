@@ -16,9 +16,6 @@
 </head>
 
 <body>
-    <div id="videos-container">
-    </div>
-
     <script type="module">
         const isServer = true;
 
@@ -45,8 +42,7 @@
             ]
         }];
 
-        connection.videosContainer = document.getElementById('videos-container');
-        connection.onstream = () => connection.videosContainer.innerHTML = 'Streaming';
+        connection.onstream = () => document.body.append('Streaming');
         connection.onstreamended = (event) => console.log('onstream end', event);
         connection.onMediaError = (e) => console.log('media error', e);
 
