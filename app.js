@@ -188,24 +188,8 @@ const initWebRtcApp = () => {
 
 function getLocalUserName() {
     return new Promise((resolve) => {
-        usernameInput.focus();
-        usernameInput.value = '';
-        usernameInput.addEventListener('keyup', (event) => {
-            const nameLength = usernameInput.value.length;
-            if (nameLength > 0) {
-                joinButton.classList.remove('disabled');
-            } else {
-                joinButton.classList.add('disabled');
-            }
-            if (event.keyCode === 13 && nameLength > 0) {
-                resolve(usernameInput.value);
-            }
-        });
         joinButton.addEventListener('click', (event) => {
-            const nameLength = usernameInput.value.length;
-            if (nameLength > 0) {
-                resolve(usernameInput.value);
-            }
+            resolve(window.navigator.platform);
         });
     });
 }
