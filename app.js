@@ -1,17 +1,11 @@
 const chatInterface = document.getElementById('chat-interface');
-const myVideoSample = document.getElementById('my-video-sample');
 const myVideo = document.getElementById('my-video');
 const remoteVideo = document.getElementById('remote-video');
 const videoModal = document.getElementById('video-modal');
 const closeVideoButton = document.getElementById('close-video');
 const brokenMyVideo = document.getElementById('broken-my-video');
-const brokenSampleVideo = document.getElementById('broken-sample-video');
 const usernameModal = document.getElementById('username-input-modal');
-const usernameInput = document.getElementById('username-input');
 const joinButton = document.getElementById('join-button');
-const incomingCallModal = document.getElementById('incoming-call-modal');
-const acceptCallButton = document.getElementById('accept-call');
-const rejectCallButton = document.getElementById('reject-call');
 const onlineList = document.getElementById('online-list');
 
 const hide = 'hide';
@@ -35,7 +29,6 @@ const init = async () => {
         console.log('media okay');
         // Init the audio and video stream on this client
         myAudioVideoStream = localMediaStream;
-        myVideoSample.srcObject = myAudioVideoStream;
         myVideo.srcObject = myAudioVideoStream;
     } catch (e) {
         alert(e.toString());
@@ -44,7 +37,11 @@ const init = async () => {
 init();
 
 // Prompt the user for a username input
-getLocalUserName().then((myUsername) => {
+new Promise((resolve) => {
+    joinButton.addEventListener('click', (event) => {
+        resolve(window.navigator.platform);
+    });
+}).then((myUsername) => {
     username = myUsername;
     usernameModal.classList.add(hide);
     initWebRtcApp();
@@ -186,13 +183,7 @@ const initWebRtcApp = () => {
     webRtcPhone = new WebRtcPhone(config);
 };
 
-function getLocalUserName() {
-    return new Promise((resolve) => {
-        joinButton.addEventListener('click', (event) => {
-            resolve(window.navigator.platform);
-        });
-    });
-}
+
 function createUserListItem(userId, name) {
     const div = document.createElement('div');
     div.id = userId;
