@@ -1,3 +1,14 @@
+const initClientStream = () => {
+    try {
+        return navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: true,
+        });
+    } catch (e) {
+        alert(e.toString());
+    }
+}
+
 const client = async () => {
     const remoteVideo = document.getElementById('remote-video');
     const globalChannel = 'global-channel';
@@ -20,15 +31,7 @@ const client = async () => {
         }
     }
 
-    let myAudioVideoStream; // Local audio and video stream
-    try {
-        myAudioVideoStream = await navigator.mediaDevices.getUserMedia({
-            audio: false,
-            video: true,
-        });
-    } catch (e) {
-        alert(e.toString());
-    }
+    const myAudioVideoStream = await initClientStream();
 
     // WebRTC phone object event for when the remote peer's video becomes available.
     const onPeerStream = (webRTCTrackEvent) => {
