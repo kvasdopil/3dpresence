@@ -62,9 +62,7 @@ const client = async () => {
   const myAudioVideoStream = await initClientStream();
 
   const onServerDiscovered = (id) => {
-    webRtcPhone.callUser(id, {
-      myStream: myAudioVideoStream
-    });
+    webRtcPhone.callUser(id, {});
   }
 
   const pubnub = await initClientPubnub(onServerDiscovered);
