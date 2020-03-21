@@ -96,7 +96,8 @@
         connection.session = {
             audio: true,
             video: true,
-            oneway: true
+            oneway: true,
+            data: true,
         };
         connection.sdpConstraints.mandatory = {
             OfferToReceiveAudio: false,
@@ -129,6 +130,13 @@
                 connection.join(ROOMID);
 
                 init3d();
+
+                setInterval(() => {
+                    connection.send({
+                        text: 'wazup'
+                    });
+                    console.log('send');
+                }, 1000)
             }
         }
     </script>

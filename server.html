@@ -27,7 +27,8 @@
         connection.session = {
             audio: true,
             video: true,
-            oneway: true
+            oneway: true,
+            data: true,
         };
         connection.sdpConstraints.mandatory = {
             OfferToReceiveAudio: false,
@@ -46,7 +47,13 @@
         connection.onstreamended = (event) => console.log('onstream end', event);
         connection.onMediaError = (e) => console.log('media error', e);
 
-        connection.open(ROOMID, () => console.log('connected', ROOMID));
+        connection.open(ROOMID, () => {
+            console.log('connected', ROOMID);
+
+            connection.onmessage = (event) => console.log('message', event);
+        });
+
+
     </script>
 </body>
 
