@@ -29,20 +29,6 @@ const client = async () => {
 
     const myAudioVideoStream = await initClientStream();
 
-    const onPeerStream = (webRTCTrackEvent) => {
-        remoteVideo.srcObject = webRTCTrackEvent.streams[0];
-    };
-
-    const onCallResponse = (acceptedCall) => {
-        if (acceptedCall) {
-            noVideoTimeout = setTimeout(noVideo, noVideoTimeoutMS);
-        }
-    };
-
-    const onDisconnect = () => {
-        clearTimeout(noVideoTimeout);
-    };
-
     const onInit = (status, response) => {
         response.channels[channel].occupants.forEach((occupant) => {
             if (occupant.state && occupant.state.name === 'server') {
@@ -92,11 +78,19 @@ const client = async () => {
         rtcConfig: {},
         ignoreNonTurn: false,
         myStream: myAudioVideoStream,
-        onPeerStream,   // is required
-        onIncomingCall: () => { }, // is required
-        onCallResponse, // is required
-        onDisconnect,   // is required
-        pubnub          // is required
+        onPeerStream: (webRTCTrackEvent) => {
+            remoteVideo.srcObject = webRTCTrackEvent.streams[0];
+        },
+        onIncomingCall: () => { },
+        onCallResponse: (acceptedCall) => {
+            if (acceptedCall) {
+                noVideoTimeout = setTimeout(noVideo, noVideoTimeoutMS);
+            }
+        },
+        onDisconnect: () => {
+            clearTimeout(noVideoTimeout);
+        },
+        pubnub
     });
 };
 
