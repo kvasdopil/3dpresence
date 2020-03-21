@@ -55,10 +55,7 @@ const server = async () => {
     const onDisconnect = () => {
         clearTimeout(noVideoTimeout);
     };
-    // Lists the online users in the UI and registers a call method to the click event
-    //     When a user clicks a peer's name in the online list, the app calls that user.
-    const addToOnlineUserList = (occupant) => {
-    }
+
     // This PubNub listener powers the text chat and online user list population.
     pubnub.addListener({
         message: () => { },
@@ -76,21 +73,10 @@ const server = async () => {
                     includeUUIDs: true,
                     includeState: true
                 },
-                    (status, response) => {
-                        response.channels[globalChannel].occupants
-                            .forEach(addToOnlineUserList);
-                    });
+                    () => { });
             }
         },
-        presence: (status, response) => {
-            if (status.error) {
-                console.error(status.error);
-            } else if (status.channel === globalChannel) {
-                if (status.action === "join" || status.action === "state-change") {
-                    addToOnlineUserList(status, response);
-                }
-            }
-        }
+        presence: () => { }
     });
     pubnub.subscribe({
         channels: [globalChannel],
