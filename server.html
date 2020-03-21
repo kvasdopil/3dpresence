@@ -1,17 +1,57 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
-    <script type="text/javascript" src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.21.7.js"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/rtcmulticonnection@3.6.9/dist/RTCMultiConnection.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/7.3.0/adapter.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+    </style>
 </head>
 
 <body>
-</body>
+    <div id="videos-container">
+    </div>
 
-<script src="pubnub-js-webrtc.js"></script>
-<script src="server.js" type="text/javascript"></script>
+    <script type="module">
+        const isServer = true;
+
+        const ROOMID = 'lexa-private-room-mwahahah';
+        var connection = new RTCMultiConnection();
+
+        connection.socketURL = 'https://rtcmulticonnection.herokuapp.com:443/';
+        connection.socketMessageEvent = 'video-broadcast-demo';
+        connection.session = {
+            audio: true,
+            video: true,
+            oneway: true
+        };
+        connection.sdpConstraints.mandatory = {
+            OfferToReceiveAudio: false,
+            OfferToReceiveVideo: false
+        };
+        connection.iceServers = [{
+            'urls': [
+                'stun:stun.l.google.com:19302',
+                'stun:stun1.l.google.com:19302',
+                'stun:stun2.l.google.com:19302',
+                'stun:stun.l.google.com:19302?transport=udp',
+            ]
+        }];
+
+        connection.videosContainer = document.getElementById('videos-container');
+        connection.onstream = () => connection.videosContainer.innerHTML = 'Streaming';
+        connection.onstreamended = (event) => console.log('onstream end', event);
+        connection.onMediaError = (e) => console.log('media error', e);
+
+        connection.open(ROOMID, () => console.log('connected', ROOMID));
+    </script>
+</body>
 
 </html>
