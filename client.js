@@ -2,10 +2,6 @@ const client = async () => {
     const remoteVideo = document.getElementById('remote-video');
     const globalChannel = 'global-channel';
     let webRtcPhone;
-    const pubnub = new PubNub({
-        publishKey: 'pub-c-27f55276-cf45-4677-886f-9c30d1c361ff',
-        subscribeKey: 'sub-c-96d014b8-6872-11ea-bfec-9ea4064cf66f'
-    });
     // An RTCConfiguration dictionary from the browser WebRTC API
     // Add STUN and TURN server information here for WebRTC calling
     const rtcConfig = {};
@@ -62,7 +58,24 @@ const client = async () => {
         }
     }
 
-    // This PubNub listener powers the text chat and online user list population.
+    const onInit = (status, response) => {
+        response.channels[globalChannel].occupants.forEach(addToOnlineUserList);
+    }
+
+    const onPresence = (status, response) => {
+        if (status.error) {
+            console.error(status.error);
+        } else if (status.channel === globalChannel) {
+            if (status.action === "join" || status.action === "state-change") {
+                addToOnlineUserList(status, response);
+            }
+        }
+    };
+
+    const pubnub = new PubNub({
+        publishKey: 'pub-c-27f55276-cf45-4677-886f-9c30d1c361ff',
+        subscribeKey: 'sub-c-96d014b8-6872-11ea-bfec-9ea4064cf66f'
+    });
     pubnub.addListener({
         message: () => { },
         status: function (statusEvent) {
@@ -78,36 +91,23 @@ const client = async () => {
                     channels: [globalChannel],
                     includeUUIDs: true,
                     includeState: true
-                },
-                    (status, response) => {
-                        response.channels[globalChannel].occupants
-                            .forEach(addToOnlineUserList);
-                    });
+                }, onInit)
             }
         },
-        presence: (status, response) => {
-            if (status.error) {
-                console.error(status.error);
-            } else if (status.channel === globalChannel) {
-                if (status.action === "join" || status.action === "state-change") {
-                    addToOnlineUserList(status, response);
-                }
-            }
-        }
+        presence: onPresence
     });
     pubnub.subscribe({
         channels: [globalChannel],
         withPresence: true
     });
     window.ismyuuid = pubnub.getUUID();
-    // Disconnect PubNub before a user navigates away from the page
     window.onbeforeunload = (event) => {
         pubnub.unsubscribe({
             channels: [globalChannel]
         });
     };
-    // WebRTC phone object configuration.
-    let config = {
+
+    webRtcPhone = new WebRtcPhone({
         rtcConfig,
         ignoreNonTurn: false,
         myStream: myAudioVideoStream,
@@ -116,8 +116,7 @@ const client = async () => {
         onCallResponse, // is required
         onDisconnect,   // is required
         pubnub          // is required
-    };
-    webRtcPhone = new WebRtcPhone(config);
+    });
 };
 
 if (window.navigator.platform !== 'MacIntel') {
