@@ -1,17 +1,16 @@
-const init = async () => {
+const server = async () => {
     const remoteVideo = document.getElementById('remote-video');
     const globalChannel = 'global-channel';
     let webRtcPhone;
-    let pubnub;
-    // An RTCConfiguration dictionary from the browser WebRTC API
-    // Add STUN and TURN server information here for WebRTC calling
+    const pubnub = new PubNub({
+        publishKey: 'pub-c-27f55276-cf45-4677-886f-9c30d1c361ff',
+        subscribeKey: 'sub-c-96d014b8-6872-11ea-bfec-9ea4064cf66f'
+    });
     const rtcConfig = {};
-    let username; // User's name in the app
+    const username = 'server';
 
     let noVideoTimeout; // Used to check if a video connection succeeded
     const noVideoTimeoutMS = 5000; // Error alert if the video fails to connect
-
-    const isClient = window.navigator.platform === 'MacIntel' ? false : true;
 
     function noVideo() {
         const message = 'No peer connection made.<br>' +
@@ -32,8 +31,6 @@ const init = async () => {
     } catch (e) {
         alert(e.toString());
     }
-
-    username = isClient ? 'client' : 'server';
 
     // WebRTC phone object event for when the remote peer's video becomes available.
     const onPeerStream = (webRTCTrackEvent) => {
@@ -61,25 +58,7 @@ const init = async () => {
     // Lists the online users in the UI and registers a call method to the click event
     //     When a user clicks a peer's name in the online list, the app calls that user.
     const addToOnlineUserList = (occupant) => {
-        const name = occupant.state ? occupant.state.name : null;
-        if (!name) return;
-
-        const isMe = pubnub.getUUID() === occupant.uuid;
-        if (isMe) {
-            return;
-        }
-
-        if (name === 'server') {
-            webRtcPhone.callUser(occupant.uuid, {
-                myStream: myAudioVideoStream
-            });
-        }
     }
-    const removeFromOnlineUserList = (uuid) => { };
-    pubnub = new PubNub({
-        publishKey: 'pub-c-27f55276-cf45-4677-886f-9c30d1c361ff',
-        subscribeKey: 'sub-c-96d014b8-6872-11ea-bfec-9ea4064cf66f'
-    });
     // This PubNub listener powers the text chat and online user list population.
     pubnub.addListener({
         message: () => { },
@@ -138,4 +117,7 @@ const init = async () => {
     webRtcPhone = new WebRtcPhone(config);
 };
 
-init();
+
+if (window.navigator.platform === 'MacIntel') {
+    server();
+}
