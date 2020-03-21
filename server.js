@@ -1,13 +1,46 @@
-const server = async () => {
-    const remoteVideo = document.getElementById('remote-video');
-    const globalChannel = 'global-channel';
-    let webRtcPhone;
+const initPubNub = () => {
+    const channel = 'global-channel';
     const pubnub = new PubNub({
         publishKey: 'pub-c-27f55276-cf45-4677-886f-9c30d1c361ff',
         subscribeKey: 'sub-c-96d014b8-6872-11ea-bfec-9ea4064cf66f'
     });
+    pubnub.addListener({
+        message: () => { },
+        status: (statusEvent) => {
+            if (statusEvent.category !== "PNConnectedCategory") {
+                return;
+            }
+            pubnub.setState({
+                state: { name: 'server' },
+                channels: [channel],
+                uuid: pubnub.getUUID()
+            });
+            pubnub.hereNow({
+                channels: [channel],
+                includeUUIDs: true,
+                includeState: true
+            }, () => { });
+        },
+        presence: () => { }
+    });
+    pubnub.subscribe({
+        channels: [channel],
+        withPresence: true
+    });
+    window.ismyuuid = pubnub.getUUID();
+    window.onbeforeunload = (event) => {
+        pubnub.unsubscribe({
+            channels: [globalChannel]
+        });
+    };
+    return pubnub;
+}
+
+const server = async () => {
+    const remoteVideo = document.getElementById('remote-video');
+    let webRtcPhone;
+
     const rtcConfig = {};
-    const username = 'server';
 
     let noVideoTimeout; // Used to check if a video connection succeeded
     const noVideoTimeoutMS = 5000; // Error alert if the video fails to connect
@@ -56,39 +89,6 @@ const server = async () => {
         clearTimeout(noVideoTimeout);
     };
 
-    // This PubNub listener powers the text chat and online user list population.
-    pubnub.addListener({
-        message: () => { },
-        status: function (statusEvent) {
-            if (statusEvent.category === "PNConnectedCategory") {
-                pubnub.setState({
-                    state: {
-                        name: username
-                    },
-                    channels: [globalChannel],
-                    uuid: pubnub.getUUID()
-                });
-                pubnub.hereNow({
-                    channels: [globalChannel],
-                    includeUUIDs: true,
-                    includeState: true
-                },
-                    () => { });
-            }
-        },
-        presence: () => { }
-    });
-    pubnub.subscribe({
-        channels: [globalChannel],
-        withPresence: true
-    });
-    window.ismyuuid = pubnub.getUUID();
-    // Disconnect PubNub before a user navigates away from the page
-    window.onbeforeunload = (event) => {
-        pubnub.unsubscribe({
-            channels: [globalChannel]
-        });
-    };
     // WebRTC phone object configuration.
     let config = {
         rtcConfig,
@@ -98,7 +98,7 @@ const server = async () => {
         onIncomingCall, // is required
         onCallResponse, // is required
         onDisconnect,   // is required
-        pubnub          // is required
+        pubnub: initPubNub() // is required
     };
     webRtcPhone = new WebRtcPhone(config);
 };
