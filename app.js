@@ -26,7 +26,7 @@ const init = async () => {
     let myAudioVideoStream; // Local audio and video stream
     try {
         myAudioVideoStream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
+            audio: false,
             video: true,
         });
     } catch (e) {
@@ -107,14 +107,8 @@ const init = async () => {
             if (status.error) {
                 console.error(status.error);
             } else if (status.channel === globalChannel) {
-                if (status.action === "join") {
+                if (status.action === "join" || status.action === "state-change") {
                     addToOnlineUserList(status, response);
-                } else if (status.action === "state-change") {
-                    addToOnlineUserList(status, response);
-                } else if (status.action === "leave") {
-                    removeFromOnlineUserList(status.uuid);
-                } else if (status.action === "timeout") {
-                    removeFromOnlineUserList(response.uuid);
                 }
             }
         }
