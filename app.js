@@ -1,6 +1,6 @@
-const chatInterface = document.getElementById('chat-interface');
+// const chatInterface = document.getElementById('chat-interface');
 const remoteVideo = document.getElementById('remote-video');
-const videoModal = document.getElementById('video-modal');
+// const videoModal = document.getElementById('video-modal');
 const closeVideoButton = document.getElementById('close-video');
 const brokenMyVideo = document.getElementById('broken-my-video');
 const usernameModal = document.getElementById('username-input-modal');
@@ -45,8 +45,8 @@ const init = async () => {
 init();
 
 const closeVideoEventHandler = (event) => {
-    videoModal.classList.add(hide);
-    chatInterface.classList.remove(hide);
+    // videoModal.classList.add(hide);
+    // chatInterface.classList.remove(hide);
     clearTimeout(noVideoTimeout);
     webRtcPhone.disconnect(); // disconnects the current phone call
 }
@@ -64,8 +64,8 @@ const initWebRtcApp = () => {
     // WebRTC phone object event for when a remote peer attempts to call you.
     const onIncomingCall = (fromUuid, callResponseCallback) => {
         webRtcPhone.disconnect();
-        videoModal.classList.remove(hide);
-        chatInterface.classList.add(hide);
+        // videoModal.classList.remove(hide);
+        // chatInterface.classList.add(hide);
         noVideoTimeout = setTimeout(noVideo, noVideoTimeoutMS);
         callResponseCallback({ acceptedCall: true });
     };
@@ -73,16 +73,16 @@ const initWebRtcApp = () => {
     const onCallResponse = (acceptedCall) => {
         console.log('Call response: ', acceptedCall ? 'accepted' : 'rejected');
         if (acceptedCall) {
-            videoModal.classList.remove(hide);
-            chatInterface.classList.add(hide);
+            // videoModal.classList.remove(hide);
+            // chatInterface.classList.add(hide);
             noVideoTimeout = setTimeout(noVideo, noVideoTimeoutMS);
         }
     };
     // WebRTC phone object event for when a call disconnects or timeouts.
     const onDisconnect = () => {
         console.log('Call disconnected');
-        videoModal.classList.add(hide);
-        chatInterface.classList.remove(hide);
+        // videoModal.classList.add(hide);
+        // chatInterface.classList.remove(hide);
         clearTimeout(noVideoTimeout);
     };
     // Lists the online users in the UI and registers a call method to the click event
