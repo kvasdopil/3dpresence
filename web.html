@@ -15,7 +15,7 @@
         }
     </style>
     <script>
-        const VRButton = {
+        window.VRButton = {
             createButton: function (renderer, options) {
                 if (options && options.referenceSpaceType) {
                     renderer.xr.setReferenceSpaceType(options.referenceSpaceType);
@@ -146,14 +146,22 @@
     </div>
 
     <script type="module">
+        const getVideoAspect = (video) => {
+            for (let track of video.srcObject.getVideoTracks()) {
+                return track.getSettings().width / track.getSettings().height;
+            }
+            return 1;
+        }
+
         const isServer = document.location.hash === "#server";
 
         let scene, camera;
         function addVideo(video) {
             try {
+                const aspectRatio = getVideoAspect(video);
                 const texture = new THREE.VideoTexture(video);
-                const geometry = new THREE.PlaneBufferGeometry(16, 9);
-                geometry.scale(0.5, 0.5, 0.5);
+                const geometry = new THREE.PlaneBufferGeometry(1 * aspectRatio, 1);
+                geometry.scale(10, 10, 10);
                 const material = new THREE.MeshBasicMaterial({ map: texture });
 
                 var phi = Math.acos(-1 + 1);
