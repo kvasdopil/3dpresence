@@ -4,17 +4,68 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-</head>
-
-<body>
-    <button id="join-room">Join Room</button>
-    <div id="videos-container"></div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/rtcmulticonnection@3.6.9/dist/RTCMultiConnection.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/7.3.0/adapter.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
 
-    <script>
+<body>
+    <div id="videos-container">
+        <button id="join-room">Join Room</button>
+    </div>
+
+    <script type="module">
+        const isServer = document.location.hash === "#server";
+
+        function init3d(video) {
+            let camera, scene, renderer;
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.z = 0.01;
+            scene = new THREE.Scene();
+
+            var texture = new THREE.VideoTexture(video);
+
+            var geometry = new THREE.PlaneBufferGeometry(16, 9);
+            geometry.scale(0.5, 0.5, 0.5);
+            var material = new THREE.MeshBasicMaterial({ map: texture });
+
+            var phi = Math.acos(-1 + 1);
+            var theta = Math.sqrt(32 * Math.PI) * phi;
+
+            var mesh = new THREE.Mesh(geometry, material);
+            mesh.position.setFromSphericalCoords(8, phi, theta);
+            mesh.lookAt(camera.position);
+            scene.add(mesh);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }, false);
+
+            let animate;
+            animate = () => {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+            }
+
+            animate();
+        }
+
         const ROOMID = 'lexa-private-room-mwahahah';
         var connection = new RTCMultiConnection();
 
@@ -40,25 +91,20 @@
 
         connection.videosContainer = document.getElementById('videos-container');
         connection.onstream = (event) => {
-            console.log('onstream', event);
-            var existing = document.getElementById(event.streamid);
-            if (existing && existing.parentNode) {
-                existing.parentNode.removeChild(existing);
+            if (isServer) {
+                connection.videosContainer.innerHTML = 'Streaming';
+            } else {
+                console.log('onstream', event);
+                init3d(event.mediaElement);
             }
-
-            event.mediaElement.controls = false;
-            connection.videosContainer.appendChild(event.mediaElement);
         };
 
         connection.onstreamended = (event) => console.log('onstream end', event);
         connection.onMediaError = (e) => console.log('media error', e);
 
-        // document.getElementById('open-room').onclick = () => {
-        //     connection.open(ROOMID, () => console.log('connected', ROOMID));
-        // };
-
         if (document.location.hash !== "#server") {
             document.getElementById('join-room').onclick = () => {
+                document.getElementById('join-room').remove();
                 connection.sdpConstraints.mandatory = {
                     OfferToReceiveAudio: true,
                     OfferToReceiveVideo: true
