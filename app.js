@@ -44,15 +44,6 @@ const init = async () => {
 }
 init();
 
-const closeVideoEventHandler = (event) => {
-    // videoModal.classList.add(hide);
-    // chatInterface.classList.remove(hide);
-    clearTimeout(noVideoTimeout);
-    webRtcPhone.disconnect(); // disconnects the current phone call
-}
-// Register a disconnect event handler when the close video button is clicked
-closeVideoButton.addEventListener('click', closeVideoEventHandler);
-
 const initWebRtcApp = () => {
     // WebRTC phone object event for when the remote peer's video becomes available.
     const onPeerStream = (webRTCTrackEvent) => {
@@ -216,6 +207,7 @@ function noVideo() {
         'Try adding a TURN server to the WebRTC configuration.';
     if (remoteVideo.paused) {
         alert(message);
-        closeVideoEventHandler();
+        clearTimeout(noVideoTimeout);
+        webRtcPhone.disconnect(); // disconnects the current phone call
     }
 }
