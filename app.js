@@ -31,19 +31,18 @@ const init = async () => {
     } catch (e) {
         alert(e.toString());
     }
-}
-init();
 
-// Prompt the user for a username input
-new Promise((resolve) => {
-    joinButton.addEventListener('click', (event) => {
-        resolve(window.navigator.platform);
-    });
-}).then((myUsername) => {
-    username = myUsername;
+    // Prompt the user for a username input
+    username = await new Promise((resolve) => {
+        joinButton.addEventListener('click', (event) => {
+            resolve(window.navigator.platform);
+        });
+    })
+
     usernameModal.classList.add(hide);
     initWebRtcApp();
-});
+}
+init();
 
 const closeVideoEventHandler = (event) => {
     videoModal.classList.add(hide);
