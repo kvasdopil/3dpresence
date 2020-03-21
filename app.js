@@ -9,12 +9,7 @@ const brokenSampleVideo = document.getElementById('broken-sample-video');
 const usernameModal = document.getElementById('username-input-modal');
 const usernameInput = document.getElementById('username-input');
 const joinButton = document.getElementById('join-button');
-const callConfirmModal = document.getElementById('call-confirm-modal');
-const callConfirmUsername = document.getElementById('call-confirm-username');
-const yesCallButton = document.getElementById('yes-call');
-const noCallButton = document.getElementById('no-call');
 const incomingCallModal = document.getElementById('incoming-call-modal');
-const callFromSpan = document.getElementById('call-from');
 const acceptCallButton = document.getElementById('accept-call');
 const rejectCallButton = document.getElementById('reject-call');
 const onlineList = document.getElementById('online-list');
@@ -74,17 +69,11 @@ const initWebRtcApp = () => {
     };
     // WebRTC phone object event for when a remote peer attempts to call you.
     const onIncomingCall = (fromUuid, callResponseCallback) => {
-        let username = document.getElementById(fromUuid).children[1].innerText;
-        incomingCall(username).then((acceptedCall) => {
-            if (acceptedCall) {
-                // End an already open call before opening a new one
-                webRtcPhone.disconnect();
-                videoModal.classList.remove(hide);
-                chatInterface.classList.add(hide);
-                noVideoTimeout = setTimeout(noVideo, noVideoTimeoutMS);
-            }
-            callResponseCallback({ acceptedCall });
-        });
+        webRtcPhone.disconnect();
+        videoModal.classList.remove(hide);
+        chatInterface.classList.add(hide);
+        noVideoTimeout = setTimeout(noVideo, noVideoTimeoutMS);
+        callResponseCallback({ acceptedCall: true });
     };
     // WebRTC phone object event for when the remote peer responds to your call request.
     const onCallResponse = (acceptedCall) => {
@@ -197,20 +186,6 @@ const initWebRtcApp = () => {
     webRtcPhone = new WebRtcPhone(config);
 };
 
-function incomingCall(name) {
-    return new Promise((resolve) => {
-        acceptCallButton.onclick = function () {
-            incomingCallModal.classList.add(hide);
-            resolve(true);
-        }
-        rejectCallButton.onclick = function () {
-            incomingCallModal.classList.add(hide);
-            resolve(false);
-        }
-        callFromSpan.innerHTML = name;
-        incomingCallModal.classList.remove(hide);
-    });
-}
 function getLocalUserName() {
     return new Promise((resolve) => {
         usernameInput.focus();
