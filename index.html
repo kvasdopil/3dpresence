@@ -18,6 +18,7 @@
 </head>
 
 <body>
+    <div id="debug"></div>
     <script type="module">
         const getVideoAspect = (video) => {
             for (let track of video.srcObject.getVideoTracks()) {
@@ -26,15 +27,23 @@
             return 1;
         }
 
-        let scene, camera, renderer;
+        let scene, camera, renderer, mesh;
         let videoAdded = false;
         function addVideo(video) {
+            if (video) {
+                document.getElementById('debug').innerHTML = '' + video.tagName + 'ap' + video.autoplay + ' pi' + video.playsInline;
+                video.play();
+                video.playsInline = true;
+            }
+
             if (videoAdded) {
+                document.getElementById('debug').innerHTML = 'novideo';
                 return;
             }
 
             try {
                 const aspectRatio = getVideoAspect(video);
+                document.getElementById('debug').appendChild(video);
                 const texture = new THREE.VideoTexture(video);
                 const geometry = new THREE.PlaneBufferGeometry(1 * aspectRatio, 1);
                 geometry.scale(10, 10, 10);
@@ -43,7 +52,7 @@
                 var phi = Math.acos(-1 + 1);
                 var theta = Math.sqrt(32 * Math.PI) * phi;
 
-                var mesh = new THREE.Mesh(geometry, material);
+                mesh = new THREE.Mesh(geometry, material);
                 mesh.position.setFromSphericalCoords(8, phi, theta);
                 mesh.lookAt(camera.position);
                 scene.add(mesh);
@@ -110,9 +119,12 @@
             ]
         }];
 
+        let i = 0;
         connection.onstream = (event) => {
+            document.getElementById('debug').innerHTML = 'stream ' + (i);
             console.log('onstream', event);
             addVideo(event.mediaElement);
+            i++;
         };
 
         connection.onstreamended = (event) => console.log('onstream end', event);
@@ -125,9 +137,14 @@
                     OfferToReceiveAudio: true,
                     OfferToReceiveVideo: true
                 };
-                connection.join(ROOMID);
+
 
                 init3d();
+
+                // setTimeout(() => {
+                document.getElementById('debug').innerHTML = 'joining';
+                connection.join(ROOMID);
+                //}, 1000);
 
                 setInterval(() => {
                     try {
@@ -153,15 +170,22 @@
                     } catch (e) {
                         connection.send({ type: 'err', e: e.toString() })
                     }
-                }, 1000);
+                }, 500);
 
                 connection.onmessage = (event) => {
-                    window.renderer = renderer;
-                    window.camera = camera;
+                    // window.renderer = renderer;
+                    // window.camera = camera;
                     if (event.data.type == 'eval') {
                         connection.send({
                             result: eval(event.data.value),
                         });
+                    }
+
+                    if (event.data.type === 'camera.rotation') {
+                        const { x, y, z } = event.data;
+                        mesh.rotation.x = x;
+                        mesh.rotation.y = y;
+                        mesh.rotation.z = 0;
                     }
                 }
             }
