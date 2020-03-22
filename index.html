@@ -38,8 +38,8 @@
                 geometry.scale(10, 10, 10);
                 const material = new THREE.MeshBasicMaterial({ map: texture });
 
-                var phi = Math.acos(0);
-                var theta = Math.sqrt(32 * Math.PI) * phi;
+                var phi = Math.acos(isLeft ? -0.1 : 0.1);
+                var theta = Math.sqrt(32 * Math.PI) * Math.acos(0);
 
                 const pl = new THREE.Mesh(geometry, material);
                 pl.position.setFromSphericalCoords(8, phi, theta);
