@@ -78,50 +78,57 @@
             document.querySelector('#left').value = window.localStorage.getItem('leftDevice');
             document.querySelector('#right').value = window.localStorage.getItem('rightDevice');
 
-            document.querySelector('#start').onclick = async () => {
-                const leftId = document.querySelector('#left').value;
-                const rightId = document.querySelector('#right').value;
-                const mediaLeft = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        width: 1280,
-                        height: 720,
-                        deviceId: { exact: leftId }
-                    },
-                    audio: true,
-                });
-                const mediaRight = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        width: { minimal: 1024, ideal: 1280 },
-                        height: 720,
-                        deviceId: { exact: rightId }
-                    },
-                    audio: false,
-                });
+            await new Promise(resolve => {
+                document.querySelector('#start').onclick = resolve;
+            });
 
-                const videoLeft = document.createElement('video');
-                videoLeft.playsInline = true;
-                videoLeft.autoplay = true;
-                videoLeft.srcObject = mediaLeft;
-                videoLeft.style = "width: 50%";
-                document.querySelector('#video-container').appendChild(videoLeft);
+            const leftId = document.querySelector('#left').value;
+            const rightId = document.querySelector('#right').value;
+            const mediaLeft = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: 1280,
+                    height: 720,
+                    deviceId: { exact: leftId }
+                },
+                audio: true,
+            });
+            const mediaRight = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { minimal: 1024, ideal: 1280 },
+                    height: 720,
+                    deviceId: { exact: rightId }
+                },
+                audio: false,
+            });
 
-                const videoRight = document.createElement('video');
-                videoRight.playsInline = true;
-                videoRight.autoplay = true;
-                videoRight.srcObject = mediaRight;
-                videoRight.style = "width: 50%";
-                document.querySelector('#video-container').appendChild(videoRight);
+            const videoLeft = document.createElement('video');
+            videoLeft.playsInline = true;
+            videoLeft.autoplay = true;
+            videoLeft.srcObject = mediaLeft;
+            videoLeft.style = "width: 50%";
+            document.querySelector('#video-container').appendChild(videoLeft);
 
-                window.localStorage.setItem('leftDevice', leftId);
-                window.localStorage.setItem('rightDevice', rightId);
+            const videoRight = document.createElement('video');
+            videoRight.playsInline = true;
+            videoRight.autoplay = true;
+            videoRight.srcObject = mediaRight;
+            videoRight.style = "width: 50%";
+            document.querySelector('#video-container').appendChild(videoRight);
 
-                console.log('start', mediaLeft);
-                connection.open(ROOMID, () => {
-                    console.log('connected', ROOMID);
+            window.localStorage.setItem('leftDevice', leftId);
+            window.localStorage.setItem('rightDevice', rightId);
 
-                    connection.addStream(mediaLeft);
-                })
-            }
+            console.log('connecting');
+
+            await new Promise(resolve => connection.open(ROOMID, resolve));
+
+            console.log('connected', ROOMID);
+
+            console.log('adding stream', mediaLeft.id);
+            connection.addStream(mediaLeft);
+
+            console.log('adding stream', mediaRight.id);
+            connection.addStream(mediaRight);
         }
 
         run();
