@@ -52,10 +52,16 @@
                 var phi = Math.acos(-1 + 1);
                 var theta = Math.sqrt(32 * Math.PI) * phi;
 
-                mesh = new THREE.Mesh(geometry, material);
-                mesh.position.setFromSphericalCoords(8, phi, theta);
-                mesh.lookAt(camera.position);
-                scene.add(mesh);
+                const group = new THREE.Group();
+
+                const pl = new THREE.Mesh(geometry, material);
+                pl.position.setFromSphericalCoords(8, phi, theta);
+                pl.lookAt(camera.position);
+
+                group.add(pl);
+                mesh = group;
+
+                scene.add(group);
                 videoAdded = true;
             } catch (e) {
                 console.error(e);
@@ -170,7 +176,7 @@
                     } catch (e) {
                         connection.send({ type: 'err', e: e.toString() })
                     }
-                }, 500);
+                }, 1000);
 
                 connection.onmessage = (event) => {
                     // window.renderer = renderer;
