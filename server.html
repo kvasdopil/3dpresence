@@ -86,33 +86,36 @@
             const rightId = document.querySelector('#right').value;
             const mediaLeft = await navigator.mediaDevices.getUserMedia({
                 video: {
-                    width: 1280,
-                    height: 720,
+                    width: { min: 1000 },
+                    height: { min: 1000 },
                     deviceId: { exact: leftId }
                 },
                 audio: true,
             });
             const mediaRight = await navigator.mediaDevices.getUserMedia({
                 video: {
-                    width: { minimal: 1024, ideal: 1280 },
-                    height: 720,
+                    width: { min: 1000 },
+                    height: { min: 1000 },
                     deviceId: { exact: rightId }
                 },
                 audio: false,
             });
+            console.log('left', mediaRight.getVideoTracks()[0].getSettings());
+            console.log('right', mediaRight.getVideoTracks()[0].getSettings());
 
             const videoLeft = document.createElement('video');
             videoLeft.playsInline = true;
             videoLeft.autoplay = true;
             videoLeft.srcObject = mediaLeft;
-            videoLeft.style = "width: 50%";
+            videoLeft.style = "width: 50%; transform: rotate(90deg)";
             document.querySelector('#video-container').appendChild(videoLeft);
+
 
             const videoRight = document.createElement('video');
             videoRight.playsInline = true;
             videoRight.autoplay = true;
             videoRight.srcObject = mediaRight;
-            videoRight.style = "width: 50%";
+            videoRight.style = "width: 50%; transform: rotate(-90deg)";
             document.querySelector('#video-container').appendChild(videoRight);
 
             window.localStorage.setItem('leftDevice', leftId);
