@@ -28,10 +28,12 @@
         }
 
         const DEFDELTA = -1;
+        const DEFZOOM = -10;
 
         let scene, camera, renderer, mesh;
         let left, right;
         let delta = DEFDELTA;
+        let zoom = DEFZOOM;
         function addVideo(video, isLeft) {
             try {
                 console.log('adding stream');
@@ -59,9 +61,8 @@
                 }
 
                 // pl.lookAt(camera.position);
-                pl.rotation.z = isLeft ? Math.PI / -2 : Math.PI / 2;
+                pl.rotation.z = Math.PI;
                 pl.layers.set(isLeft ? 1 : 2);
-
 
                 console.log('adding');
                 mesh.add(pl);
@@ -169,14 +170,17 @@
                     const session = renderer.xr && renderer.xr.getSession();
                     if (session) {
                         const [x, y] = session.inputSources[0].gamepad.axes;
-                        delta = (x !== 0) ? DEFDELTA + x : DEFDELTA;
+                        delta = DEFDELTA + x;
+                        zoom = DEFZOOM + y * 10;
                     }
 
                     if (left) {
                         left.position.x = -delta;
+                        left.position.z = zoom;
                     }
                     if (right) {
                         right.position.x = delta;
+                        right.position.z = zoom;
                     }
                 }, 100);
 
